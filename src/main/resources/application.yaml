@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: banking-platform
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/banking_platform
+    username: postgres
+    password: root
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true

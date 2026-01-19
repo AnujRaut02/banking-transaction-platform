@@ -1,14 +1,13 @@
 package com.banking.platform.controller;
 
+import com.banking.platform.domain.Transaction;
 import com.banking.platform.dto.TransactionRequest;
 import com.banking.platform.dto.TransferRequest;
 import com.banking.platform.service.TransactionService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/transactions")
@@ -36,5 +35,12 @@ public class TransactionController {
     public ResponseEntity<String> transfer(@Valid @RequestBody TransferRequest request){
         transactionService.transfer(request);
         return ResponseEntity.ok("Transfer Successful");
+    }
+
+    @GetMapping
+    public Page<Transaction> getTransaction(@RequestParam String accountNumber,
+                                           @RequestParam int page,
+                                           @RequestParam int size){
+        return transactionService.getTransaction(accountNumber,page,size);
     }
 }

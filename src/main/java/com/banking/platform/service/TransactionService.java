@@ -8,8 +8,9 @@ import com.banking.platform.dto.TransactionRequest;
 import com.banking.platform.dto.TransferRequest;
 import com.banking.platform.repository.AccountRepository;
 import com.banking.platform.repository.TransactionRepository;
-import org.springframework.cglib.core.Local;
-import org.springframework.http.ResponseEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -104,5 +105,13 @@ public class TransactionService {
         transactionRepository.save(debitTx);
         transactionRepository.save(creditTx);
 
+    }
+
+    public Page<Transaction> getTransaction(
+            String accountNumber, int page, int size){
+        return transactionRepository.findByAccount_AccountNumber(
+                accountNumber,
+                PageRequest.of(page,size, Sort.by("createdAt").descending())
+        );
     }
 }

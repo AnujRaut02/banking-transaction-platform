@@ -2,9 +2,11 @@ package com.banking.platform.service;
 
 import com.banking.platform.domain.Account;
 import com.banking.platform.domain.AccountStatus;
+import com.banking.platform.domain.Customer;
 import com.banking.platform.dto.AccountResponse;
 import com.banking.platform.dto.CreateAccountRequest;
 import com.banking.platform.repository.AccountRepository;
+import com.banking.platform.repository.CustomerRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,20 +17,22 @@ public class AccountService {
 
     private final AccountRepository accountRepository;
 
+    private final CustomerRepository customerRepository;
 
-    public AccountService(AccountRepository accountRepository) {
+    public AccountService(AccountRepository accountRepository, CustomerRepository customerRepository) {
         this.accountRepository = accountRepository;
+        this.customerRepository = customerRepository;
     }
 
     @Transactional
     public AccountResponse createAccount(CreateAccountRequest request){
-        accountRepository.findByAccountNumber(request.getAccountNumber())
-                .ifPresent(a->{
-                    throw new IllegalStateException("Account already exists");
-                });
+        Customer customer = customerRepository.findById(request.getCustomerId())
+                .orElseThrow(()->new IllegalStateException("Customer not found"));
+
 
         Account account= new Account();
         account.setAccountNumber(request.getAccountNumber());
+        account.setCustomer(customer);
         account.setStatus(AccountStatus.ACTIVE);
         account.setBalance(BigDecimal.ZERO);
 

@@ -1,4 +1,5 @@
 package com.banking.platform.domain;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -21,6 +22,11 @@ public class Account {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @ManyToOne(fetch =FetchType.LAZY)
+    @JoinColumn(name = "customer_id", nullable = false)
+    @JsonIgnore
+    private Customer customer;
+
     @Column(name="account_number", nullable = false, updatable = false)
     private String accountNumber;
 
@@ -33,5 +39,4 @@ public class Account {
 
     @Version
     private Long version;
-
 }

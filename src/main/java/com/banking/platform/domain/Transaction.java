@@ -1,13 +1,8 @@
 package com.banking.platform.domain;
-
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.boot.autoconfigure.web.WebProperties;
-import org.springframework.stereotype.Service;
-
 import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.time.LocalDateTime;
 
 @Entity
@@ -19,7 +14,6 @@ public class Transaction {
     @Id
     @GeneratedValue(strategy= GenerationType.IDENTITY)
     private Long id;
-
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "account_id")

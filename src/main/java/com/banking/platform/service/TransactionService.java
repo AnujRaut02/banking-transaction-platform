@@ -5,6 +5,7 @@ import com.banking.platform.domain.Transaction;
 import com.banking.platform.domain.TransactionStatus;
 import com.banking.platform.domain.TransactionType;
 import com.banking.platform.dto.TransactionRequest;
+import com.banking.platform.dto.TransferRequest;
 import com.banking.platform.repository.AccountRepository;
 import com.banking.platform.repository.TransactionRepository;
 import org.springframework.cglib.core.Local;
@@ -45,6 +46,7 @@ public class TransactionService {
 
     }
 
+    @Transactional
     public void debit(TransactionRequest request){
         Account account = accountRepository.findByAccountNumber(request.getAccountNumber())
                 .orElseThrow(()-> new IllegalStateException("Account not found"));
@@ -63,5 +65,44 @@ public class TransactionService {
         tx.setCreatedAt(LocalDateTime.now());
 
         transactionRepository.save(tx);
+    }
+
+    @Transactional
+    public void transfer(TransferRequest request){
+
+        Account from = accountRepository.findByAccountNumber(request.getFromAccount())
+                .orElseThrow(()-> new IllegalStateException("Source account not found"));
+
+        Account to = accountRepository.findByAccountNumber(request.getToAccount())
+                .orElseThrow(()-> new IllegalStateException("Target account not found"));
+
+        if (from.getBalance().compareTo(request.getAmount())<0){
+            throw new IllegalStateException("Insufficient Balance");
+        }
+
+        //account updating
+        from.setBalance(from.getBalance().subtract(request.getAmount()));
+        to.setBalance(to.getBalance().add(request.getAmount()));
+
+        //storing debit history
+        Transaction debitTx = new Transaction();
+        debitTx.setAccount(from);
+        debitTx.setType(TransactionType.DEBIT);
+        debitTx.setAmount(request.getAmount());
+        debitTx.setStatus(TransactionStatus.SUCCESS);
+        debitTx.setCreatedAt(LocalDateTime.now());
+
+
+        //storing credit history
+        Transaction creditTx = new Transaction();
+        creditTx.setAccount(to);
+        creditTx.setType(TransactionType.CREDIT);
+        creditTx.setAmount(request.getAmount());
+        creditTx.setStatus(TransactionStatus.SUCCESS);
+        creditTx.setCreatedAt(LocalDateTime.now());
+
+        transactionRepository.save(debitTx);
+        transactionRepository.save(creditTx);
+
     }
 }

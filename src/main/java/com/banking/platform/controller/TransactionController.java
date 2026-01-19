@@ -1,6 +1,7 @@
 package com.banking.platform.controller;
 
 import com.banking.platform.dto.TransactionRequest;
+import com.banking.platform.dto.TransferRequest;
 import com.banking.platform.service.TransactionService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -29,5 +30,11 @@ public class TransactionController {
     public ResponseEntity<String> debit(@Valid @RequestBody TransactionRequest request){
         transactionService.debit(request);
         return ResponseEntity.ok("Amount debited Successfully");
+    }
+
+    @PostMapping("/transfer")
+    public ResponseEntity<String> transfer(@Valid @RequestBody TransferRequest request){
+        transactionService.transfer(request);
+        return ResponseEntity.ok("Transfer Successful");
     }
 }

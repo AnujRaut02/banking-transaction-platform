@@ -5,16 +5,22 @@ import com.banking.platform.domain.Transaction;
 import com.banking.platform.domain.TransactionStatus;
 import com.banking.platform.domain.TransactionType;
 import com.banking.platform.dto.TransactionRequest;
+import com.banking.platform.dto.TransactionResponse;
 import com.banking.platform.dto.TransferRequest;
 import com.banking.platform.repository.AccountRepository;
 import com.banking.platform.repository.TransactionRepository;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.List;
 
 @Service
 public class TransactionService {
@@ -29,6 +35,7 @@ public class TransactionService {
     }
 
     @Transactional
+    @CacheEvict(value = "transactions", allEntries = true)
     public void credit(TransactionRequest request){
 
         Account account = accountRepository.findByAccountNumber(request.getAccountNumber())
@@ -48,6 +55,7 @@ public class TransactionService {
     }
 
     @Transactional
+    @CacheEvict(value = "transactions", allEntries = true)
     public void debit(TransactionRequest request){
         Account account = accountRepository.findByAccountNumber(request.getAccountNumber())
                 .orElseThrow(()-> new IllegalStateException("Account not found"));
@@ -69,6 +77,7 @@ public class TransactionService {
     }
 
     @Transactional
+    @CacheEvict(value = "transactions", allEntries = true)
     public void transfer(TransferRequest request){
 
         Account from = accountRepository.findByAccountNumber(request.getFromAccount())
@@ -107,11 +116,22 @@ public class TransactionService {
 
     }
 
-    public Page<Transaction> getTransaction(
-            String accountNumber, int page, int size){
-        return transactionRepository.findByAccount_AccountNumber(
-                accountNumber,
-                PageRequest.of(page,size, Sort.by("createdAt").descending())
-        );
+    @Cacheable(
+            value = "transactions:v1",
+            key = "T(String).format('%s:%d:%d', #accountNumber, #page, #size)",
+            unless = "#result.isEmpty()"
+    )
+    public List<TransactionResponse> getTransaction(String accountNumber, int page, int size){
+
+        Pageable pageable= PageRequest.of(page, size, Sort.by("createdAt").descending());
+        System.out.println(">>> DB HIT 2<<<");
+        return transactionRepository.findByAccount_AccountNumber(accountNumber,pageable)
+                .map(tx -> new TransactionResponse(
+                        tx.getAmount(),
+                        tx.getType().name(),
+                        tx.getStatus().name(),
+                        tx.getCreatedAt()
+                )).getContent();
+
     }
 }

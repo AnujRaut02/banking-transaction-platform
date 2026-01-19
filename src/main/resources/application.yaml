@@ -11,6 +11,25 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: true
+    open-in-view: false
     properties:
       hibernate:
         format_sql: true
+
+  cache:
+    type: redis
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 60000
+
+# 🔴 logging MUST be here
+logging:
+  level:
+    root: INFO
+    org.springframework.cache: TRACE
+    org.springframework.data.redis.cache: TRACE
+    org.springframework.data.redis.serializer: TRACE
+    org.springframework.web.servlet.DispatcherServlet: DEBUG

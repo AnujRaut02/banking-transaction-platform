@@ -7,10 +7,12 @@ import com.banking.platform.domain.TransactionType;
 import com.banking.platform.dto.TransactionRequest;
 import com.banking.platform.dto.TransactionResponse;
 import com.banking.platform.dto.TransferRequest;
+import com.banking.platform.event.MoneyTransferredEvent;
 import com.banking.platform.repository.AccountRepository;
 import com.banking.platform.repository.TransactionRepository;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -27,11 +29,13 @@ public class TransactionService {
 
     private final AccountRepository accountRepository;
     private final TransactionRepository transactionRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
 
-    public TransactionService(AccountRepository accountRepository, TransactionRepository transactionRepository) {
+    public TransactionService(AccountRepository accountRepository, TransactionRepository transactionRepository, ApplicationEventPublisher eventPublisher) {
         this.accountRepository = accountRepository;
         this.transactionRepository = transactionRepository;
+        this.eventPublisher = eventPublisher;
     }
 
     @Transactional
@@ -102,7 +106,6 @@ public class TransactionService {
         debitTx.setStatus(TransactionStatus.SUCCESS);
         debitTx.setCreatedAt(LocalDateTime.now());
 
-
         //storing credit history
         Transaction creditTx = new Transaction();
         creditTx.setAccount(to);
@@ -113,6 +116,8 @@ public class TransactionService {
 
         transactionRepository.save(debitTx);
         transactionRepository.save(creditTx);
+
+        eventPublisher.publishEvent(new MoneyTransferredEvent(request.getFromAccount(), request.getToAccount(), request.getAmount()));
 
     }
 

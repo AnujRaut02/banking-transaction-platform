@@ -46,4 +46,21 @@ public class AccountService {
         return response;
 
     }
+
+    public Account getByAccountNumber(String accountNumber){
+        return accountRepository.findByAccountNumber(accountNumber)
+                .orElseThrow(()->new IllegalStateException("Account not found"));
+    }
+
+    public void debit(Account account, BigDecimal amount){
+        if(account.getBalance().compareTo(amount)<0){
+            throw new IllegalStateException("Insufficient balance");
+        }
+        account.setBalance(account.getBalance().subtract(amount));
+    }
+
+    public void credit(Account account,BigDecimal amount){
+        account.setBalance(account.getBalance().add(amount));
+    }
+
 }

@@ -5,8 +5,8 @@ import com.banking.platform.dto.TransactionRequest;
 import com.banking.platform.dto.TransactionResponse;
 import com.banking.platform.dto.TransferRequest;
 import com.banking.platform.service.TransactionService;
+import com.banking.platform.service.TransferService;
 import jakarta.validation.Valid;
-import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,9 +17,10 @@ import java.util.List;
 public class TransactionController {
 
     private final TransactionService transactionService;
+    private final TransferService transferService;
 
-    public TransactionController(TransactionService transactionService) {
-        this.transactionService = transactionService;
+    public TransactionController(TransactionService transactionService, TransferService transferService) {
+        this.transactionService = transactionService; this.transferService = transferService;
     }
 
     @PostMapping("/credit")
@@ -36,7 +37,7 @@ public class TransactionController {
 
     @PostMapping("/transfer")
     public ResponseEntity<String> transfer(@Valid @RequestBody TransferRequest request){
-        transactionService.transfer(request);
+        transferService.transfer(request);
         return ResponseEntity.ok("Transfer Successful");
     }
 

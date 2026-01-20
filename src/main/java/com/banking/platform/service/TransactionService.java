@@ -6,120 +6,77 @@ import com.banking.platform.domain.TransactionStatus;
 import com.banking.platform.domain.TransactionType;
 import com.banking.platform.dto.TransactionRequest;
 import com.banking.platform.dto.TransactionResponse;
-import com.banking.platform.dto.TransferRequest;
-import com.banking.platform.event.MoneyTransferredEvent;
-import com.banking.platform.repository.AccountRepository;
 import com.banking.platform.repository.TransactionRepository;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.List;
 
 @Service
 public class TransactionService {
 
-    private final AccountRepository accountRepository;
     private final TransactionRepository transactionRepository;
-    private final ApplicationEventPublisher eventPublisher;
+    private final AccountService accountService;
 
-
-    public TransactionService(AccountRepository accountRepository, TransactionRepository transactionRepository, ApplicationEventPublisher eventPublisher) {
-        this.accountRepository = accountRepository;
+    public TransactionService(TransactionRepository transactionRepository, AccountService accountService) {
         this.transactionRepository = transactionRepository;
-        this.eventPublisher = eventPublisher;
+        this.accountService = accountService;
+    }
+
+
+    public void recordCredit(Account account, BigDecimal amount){
+        Transaction tx = new Transaction();
+        tx.setAccount(account);
+        tx.setType(TransactionType.CREDIT);
+        tx.setAmount(amount);
+        tx.setStatus(TransactionStatus.SUCCESS);
+        tx.setCreatedAt(LocalDateTime.now());
+        transactionRepository.save(tx);
+    }
+
+    public void recordDebit(Account account, BigDecimal amount){
+        Transaction tx =new Transaction();
+        tx.setAccount(account);
+        tx.setType(TransactionType.DEBIT);
+        tx.setAmount(amount);
+        tx.setStatus(TransactionStatus.SUCCESS);
+        tx.setCreatedAt(LocalDateTime.now());
+        transactionRepository.save(tx);
+    }
+
+
+    @Transactional
+    @CacheEvict(value = "transactions", allEntries = true)
+    public void debit(TransactionRequest request){
+
+        Account account = accountService.getByAccountNumber(request.getAccountNumber());
+
+        accountService.debit(account,request.getAmount());
+
+        recordDebit(account,request.getAmount());
+
     }
 
     @Transactional
     @CacheEvict(value = "transactions", allEntries = true)
     public void credit(TransactionRequest request){
 
-        Account account = accountRepository.findByAccountNumber(request.getAccountNumber())
-                .orElseThrow(()-> new IllegalStateException("Account not found"));
+        Account account = accountService.getByAccountNumber(request.getAccountNumber());
 
-        account.setBalance(account.getBalance().add(request.getAmount()));
+        accountService.credit(account,request.getAmount());
 
-        Transaction tx = new Transaction();
-        tx.setAccount(account);
-        tx.setType(TransactionType.CREDIT);
-        tx.setAmount(request.getAmount());
-        tx.setStatus(TransactionStatus.SUCCESS);
-        tx.setCreatedAt(LocalDateTime.now());
-
-        transactionRepository.save(tx);
+        recordCredit(account,request.getAmount());
 
     }
 
-    @Transactional
-    @CacheEvict(value = "transactions", allEntries = true)
-    public void debit(TransactionRequest request){
-        Account account = accountRepository.findByAccountNumber(request.getAccountNumber())
-                .orElseThrow(()-> new IllegalStateException("Account not found"));
 
-        if (account.getBalance().compareTo(request.getAmount())<0){
-            throw new IllegalStateException("Insufficient balance");
-        }
-
-        account.setBalance(account.getBalance().subtract(request.getAmount()));
-
-        Transaction tx =new Transaction();
-        tx.setAccount(account);
-        tx.setType(TransactionType.DEBIT);
-        tx.setAmount(request.getAmount());
-        tx.setStatus(TransactionStatus.SUCCESS);
-        tx.setCreatedAt(LocalDateTime.now());
-
-        transactionRepository.save(tx);
-    }
-
-    @Transactional
-    @CacheEvict(value = "transactions", allEntries = true)
-    public void transfer(TransferRequest request){
-
-        Account from = accountRepository.findByAccountNumber(request.getFromAccount())
-                .orElseThrow(()-> new IllegalStateException("Source account not found"));
-
-        Account to = accountRepository.findByAccountNumber(request.getToAccount())
-                .orElseThrow(()-> new IllegalStateException("Target account not found"));
-
-        if (from.getBalance().compareTo(request.getAmount())<0){
-            throw new IllegalStateException("Insufficient Balance");
-        }
-
-        //account updating
-        from.setBalance(from.getBalance().subtract(request.getAmount()));
-        to.setBalance(to.getBalance().add(request.getAmount()));
-
-        //storing debit history
-        Transaction debitTx = new Transaction();
-        debitTx.setAccount(from);
-        debitTx.setType(TransactionType.DEBIT);
-        debitTx.setAmount(request.getAmount());
-        debitTx.setStatus(TransactionStatus.SUCCESS);
-        debitTx.setCreatedAt(LocalDateTime.now());
-
-        //storing credit history
-        Transaction creditTx = new Transaction();
-        creditTx.setAccount(to);
-        creditTx.setType(TransactionType.CREDIT);
-        creditTx.setAmount(request.getAmount());
-        creditTx.setStatus(TransactionStatus.SUCCESS);
-        creditTx.setCreatedAt(LocalDateTime.now());
-
-        transactionRepository.save(debitTx);
-        transactionRepository.save(creditTx);
-
-        eventPublisher.publishEvent(new MoneyTransferredEvent(request.getFromAccount(), request.getToAccount(), request.getAmount()));
-
-    }
 
     @Cacheable(
             value = "transactions:v1",

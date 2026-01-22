@@ -17,7 +17,7 @@ public class TransferRequest {
     @NotNull
     private String toAccount;
 
-    @Positive
+    @Positive(message = "Amount must be greater than 0")
     private BigDecimal amount;
 
 }

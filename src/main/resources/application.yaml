@@ -25,6 +25,26 @@ spring:
       port: 6379
       timeout: 60000
 
+  kafka:
+    bootstrap-servers: pkc-l7pr2.ap-south-1.aws.confluent.cloud:9092
+    properties:
+      security.protocol: SASL_SSL
+      sasl.mechanism: PLAIN
+      sasl.jaas.config: >
+        org.apache.kafka.common.security.plain.PlainLoginModule required
+        username="S5E4ZVKUA45X7VWQ"
+        password="cfltjLaMfsbl0a3Vo/Tso78vxEniWvo9Do43r779Ppn0ClD3a9RDP38zun8CfEVA";
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    consumer:
+      group-id: banking-notification-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+
 # 🔴 logging MUST be here
 logging:
   level:

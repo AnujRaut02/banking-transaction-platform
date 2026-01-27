@@ -33,7 +33,7 @@ public class TransferFailureListener {
             return;
         }
 
-        // 🔒 NEVER override a completed transfer
+        // Never to override a completed transfer
         if (transfer.getStatus() == TransferStatus.COMPLETED) {
             ack.acknowledge();
             return;

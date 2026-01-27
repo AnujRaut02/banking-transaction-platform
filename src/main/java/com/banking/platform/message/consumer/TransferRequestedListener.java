@@ -8,7 +8,6 @@ import com.banking.platform.transfer.domain.TransferStatus;
 import com.banking.platform.transfer.event.DebitCompletedEvent;
 import com.banking.platform.transfer.event.TransferRequestedEvent;
 import com.banking.platform.transfer.persistence.TransferRepository;
-import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -53,7 +52,7 @@ public class TransferRequestedListener {
             if (idempotencyGuard.alreadyProcessed(event.eventId().toString())) {
                 return;
             }
-            log.error("🔥 TransferRequestedListener ACTIVE {}", this);
+            log.error("ransferRequestedListener ACTIVE {}", this);
             Transfer transfer = transferRepository
                     .findById(event.transferId())
                     .orElse(null);
@@ -97,7 +96,7 @@ public class TransferRequestedListener {
             idempotencyGuard.markProcessed(event.eventId().toString(), "TRANSFER_REQUESTED");
 
         } finally {
-            ack.acknowledge(); // ✅ EXACTLY ONCE
+            ack.acknowledge();
         }
     }
 

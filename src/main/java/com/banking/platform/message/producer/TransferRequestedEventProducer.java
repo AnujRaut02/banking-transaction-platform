@@ -23,7 +23,7 @@ public class TransferRequestedEventProducer {
         );
 
         log.info(
-                "🔥 PRODUCING transfer.requested transferId={}",
+                "PRODUCING transfer.requested transferId={}",
                 event.transferId()
         );
     }

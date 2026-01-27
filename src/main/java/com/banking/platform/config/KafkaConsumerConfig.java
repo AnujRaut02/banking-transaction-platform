@@ -1,7 +1,6 @@
 package com.banking.platform.config;
 
 
-import com.banking.platform.exception.ValidationFailureException;
 import com.banking.platform.transfer.observability.TransferMetrics;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.common.TopicPartition;
@@ -32,7 +31,7 @@ public class KafkaConsumerConfig {
 
         factory.setConsumerFactory(consumerFactory);
 
-        //  DLT handler (THIS is where DLT metric belongs)
+        //  DLT handler
         DeadLetterPublishingRecoverer recoverer =
                 new DeadLetterPublishingRecoverer(
                         kafkaTemplate,

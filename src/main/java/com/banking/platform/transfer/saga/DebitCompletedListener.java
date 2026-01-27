@@ -24,7 +24,6 @@ public class DebitCompletedListener {
 
     private final TransferRepository transferRepository;
     private final KafkaTemplate<String, Object> kafkaTemplate;
-    private final TransferMetrics metrics;
     private final EventIdempotencyGuard idempotencyGuard;
 
 
@@ -34,11 +33,10 @@ public class DebitCompletedListener {
     ) {
         this.transferRepository = transferRepository;
         this.kafkaTemplate = kafkaTemplate;
-        this.metrics = metrics;
         this.idempotencyGuard = idempotencyGuard;
     }
 
-    //@KafkaListener(topics = "debit.completed")
+    @KafkaListener(topics = "debit.completed")
     @Transactional
     public void onDebitCompleted(
             DebitCompletedEvent event,

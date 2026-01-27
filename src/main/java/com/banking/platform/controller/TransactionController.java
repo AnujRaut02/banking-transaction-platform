@@ -1,13 +1,13 @@
 package com.banking.platform.controller;
 
-import com.banking.platform.domain.Transaction;
 import com.banking.platform.dto.TransactionRequest;
 import com.banking.platform.dto.TransactionResponse;
-import com.banking.platform.dto.TransferRequest;
+import com.banking.platform.transfer.api.TransferRequest;
 import com.banking.platform.service.TransactionService;
-import com.banking.platform.service.TransferService;
+import com.banking.platform.transfer.application.TransferService;
 import jakarta.validation.Valid;
 import org.apache.coyote.BadRequestException;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -37,14 +37,15 @@ public class TransactionController {
     }
 
     @PostMapping("/transfer")
-    public ResponseEntity<String> transfer(@RequestHeader(value = "Idempotency-key",required = false) String idempotencyKey,
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    public ResponseEntity<Void> transfer(@RequestHeader(value = "Idempotency-key",required = false) String idempotencyKey,
             @Valid @RequestBody TransferRequest request) throws BadRequestException {
 
         if (idempotencyKey == null || idempotencyKey.isBlank()) {
             throw new BadRequestException("Idempotency-Key must not be blank");
         }
-        transferService.transfer(idempotencyKey, request);
-        return ResponseEntity.ok("Transfer Successful");
+        transferService.initiateTransfer(idempotencyKey, request);
+        return ResponseEntity.accepted().build();
     }
 
     @GetMapping

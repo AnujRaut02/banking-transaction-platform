@@ -1,4 +1,4 @@
-package com.banking.platform.domain.event;
+package com.banking.platform.transfer.event;
 
 import lombok.*;
 

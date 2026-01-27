@@ -1,4 +1,4 @@
-package com.banking.platform.dto;
+package com.banking.platform.transfer.api;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;

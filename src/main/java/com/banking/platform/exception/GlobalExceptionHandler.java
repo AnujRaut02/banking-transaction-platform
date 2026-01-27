@@ -2,6 +2,9 @@ package com.banking.platform.exception;
 
 import com.banking.platform.dto.ErrorResponse;
 import org.apache.coyote.BadRequestException;
+import org.apache.logging.log4j.Logger;
+import org.slf4j.ILoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -10,8 +13,12 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.util.NoSuchElementException;
+
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    private Logger log;
 
     @ExceptionHandler(IllegalStateException.class)
     public ResponseEntity<ErrorResponse> handleIllegalState(IllegalStateException exception){
@@ -47,5 +54,20 @@ public class GlobalExceptionHandler {
                 .body(new ErrorResponse(message, 400));
     }
 
+
+    @ExceptionHandler(NoSuchElementException.class)
+    public ResponseEntity<String> handleNotFound(NoSuchElementException ex) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body("Account not found");
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleConstraint(DataIntegrityViolationException ex) {
+        log.error("GLOBAL EXCEPTION", ex);
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(new ErrorResponse("Duplicate or conflicting request", 409));
+    }
 
 }

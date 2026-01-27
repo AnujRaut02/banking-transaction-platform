@@ -1,11 +1,12 @@
 package com.banking.platform.message.consumer;
 
 import com.banking.platform.domain.audit.AuditLog;
-import com.banking.platform.domain.event.TransferCompletedEvent;
+import com.banking.platform.transfer.event.TransferCompletedEvent;
 import com.banking.platform.repository.AuditLogRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Component
@@ -22,6 +23,7 @@ public class AuditConsumer {
             groupId = "audit-group",
             autoStartup = "false"
     )
+    @Transactional(readOnly = true)
     public void consume(TransferCompletedEvent event) {
 
         try {
